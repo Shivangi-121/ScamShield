@@ -9,16 +9,40 @@ const TextScamDetector = () => {
   const [results, setResults] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!inputText.trim()) return;
     
     setIsAnalyzing(true);
-    // Simulate AI processing time
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:8000/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: inputText }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Analysis failed');
+      }
+
+      const data = await response.json();
+      
+      // Map backend response to frontend structure
+      setResults({
+        probability: Math.round(data.probability),
+        label: data.label,
+        riskyWords: data.riskyWords,
+        insights: data.insights
+      });
+    } catch (error) {
+      console.error('Error analyzing text:', error);
+      // Fallback to local analysis if backend fails
       const analysis = analyzeText(inputText);
       setResults(analysis);
+    } finally {
       setIsAnalyzing(false);
-    }, 800);
+    }
   };
 
   const reset = () => {
@@ -130,6 +154,38 @@ const TextScamDetector = () => {
                 </span>
               </div>
             </div>
+
+            {results.insights && results.insights.length > 0 && (
+              <div className="glass-card" style={{ marginTop: '1.5rem' }}>
+                <h3 style={{ marginBottom: '1rem', fontSize: '1rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Search size={18} />
+                  Detection Insights
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {results.insights.map((insight, idx) => (
+                    <motion.div 
+                      key={idx}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      style={{ 
+                        padding: '10px 15px', 
+                        background: 'rgba(255,255,255,0.05)', 
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        borderLeft: `4px solid ${results.label === 'Scam' ? 'var(--status-danger)' : 'var(--status-warning)'}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px'
+                      }}
+                    >
+                      <AlertTriangle size={14} color={results.label === 'Scam' ? 'var(--status-danger)' : 'var(--status-warning)'} />
+                      {insight}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="glass-card" style={{ marginTop: '1.5rem' }}>
               <h3 style={{ marginBottom: '1rem', fontSize: '1rem', color: 'var(--text-secondary)' }}>

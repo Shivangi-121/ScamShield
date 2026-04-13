@@ -6,7 +6,7 @@
 
 .main-header {
   border-bottom: 1px solid var(--border-color);
-  background: rgba(2, 6, 23, 0.8);
+  background: var(--nav-bg);
   backdrop-filter: blur(8px);
   position: sticky;
   top: 0;

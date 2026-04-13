@@ -1,9 +1,21 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import TextScamDetector from './components/TextScamDetector/TextScamDetector';
-import { Shield, Lock, Eye, Zap } from 'lucide-react';
+import { Shield, Lock, Eye, Zap, Sun, Moon } from 'lucide-react';
 import './App.css';
 
 function App() {
+  const [theme, setTheme] = React.useState(localStorage.getItem('theme') || 'dark');
+
+  React.useEffect(() => {
+    document.body.className = theme === 'light' ? 'light-theme' : '';
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
   return (
     <div className="app-shell">
       <header className="main-header">
@@ -12,25 +24,42 @@ function App() {
             <Shield className="logo-icon" size={32} />
             <h1>Scam<span className="gradient-text">Shield</span></h1>
           </div>
-          <nav>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
             <ul className="nav-links">
               <li className="active">Text Detector</li>
               <li className="disabled">Link Scan</li>
               <li className="disabled">Voice AI</li>
             </ul>
+            <button 
+              onClick={toggleTheme} 
+              className="theme-toggle"
+              aria-label="Toggle Theme"
+              style={{
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                padding: '8px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid var(--border-color)'
+              }}
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
           </nav>
         </div>
       </header>
 
       <main className="container">
         <section className="hero">
-          <motion_h2 
+          <motion.h2 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="hero-title"
           >
             Real-Time <span className="gradient-text">Fraud Detection</span>
-          </motion_h2>
+          </motion.h2>
           <p className="hero-subtitle">
             Protect yourself from phishing, SMiShing, and social engineering. 
             Our AI analyzes patterns and keywords to keep you safe.
@@ -60,16 +89,11 @@ function App() {
 
       <footer className="footer">
         <div className="container">
-          <p>&copy; 2024 ScamShield AI. Stay Safe Online.</p>
+          <p>&copy; 2026 ScamShield AI. Stay Safe Online.</p>
         </div>
       </footer>
     </div>
   );
 }
-
-// Simple wrapper for motion to avoid import issues if not using motion directly in App
-const motion_h2 = ({children, className, ...props}) => (
-  <h2 className={className} {...props}>{children}</h2>
-);
 
 export default App;

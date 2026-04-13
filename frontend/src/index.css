@@ -1,4 +1,5 @@
 :root {
+  /* Dark Theme (Default) */
   --bg-primary: #020617;
   --bg-secondary: #0f172a;
   --bg-card: rgba(30, 41, 59, 0.7);
@@ -13,6 +14,24 @@
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --glass-border: 1px solid rgba(255, 255, 255, 0.1);
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --nav-bg: rgba(2, 6, 23, 0.8);
+}
+
+.light-theme {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --accent-primary: #0ea5e9;
+  --accent-secondary: #6366f1;
+  --status-safe: #059669;
+  --status-warning: #d97706;
+  --status-danger: #dc2626;
+  --border-color: rgba(0, 0, 0, 0.05);
+  --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+  --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+  --nav-bg: rgba(248, 250, 252, 0.8);
 }
 
 * {
@@ -29,6 +48,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
