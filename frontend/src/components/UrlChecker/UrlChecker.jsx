@@ -1,4 +1,20 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import "./UrlChecker.css";
+
+const SAMPLE_URLS = [
+  {
+    label: "Safe banking",
+    value: "https://www.chase.com/personal",
+  },
+  {
+    label: "Shortened link",
+    value: "http://bit.ly/free-prize-claim",
+  },
+  {
+    label: "Brand spoof",
+    value: "https://paypal-login-security-alert.xyz/verify",
+  },
+];
 
 function UrlChecker() {
   const [url, setUrl] = useState("");
@@ -6,6 +22,14 @@ function UrlChecker() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [recentChecks, setRecentChecks] = useState([]);
+
+  const riskTone = useMemo(() => {
+    if (!result) return "neutral";
+    if (result.label === "Safe") return "safe";
+    if (result.label === "Suspicious") return "warning";
+    return "danger";
+  }, [result]);
 
   const checkUrl = async () => {
     if (!url.trim()) {
@@ -32,6 +56,22 @@ function UrlChecker() {
 
       const data = await res.json();
       setResult(data);
+      setRecentChecks((current) => {
+        const nextEntry = {
+          id: `${Date.now()}-${data.url}`,
+          url: data.url,
+          label: data.label,
+          riskScore: data.risk_score,
+          reasons: data.reasons,
+          checkedAt: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+
+        const deduped = current.filter((entry) => entry.url !== nextEntry.url);
+        return [nextEntry, ...deduped].slice(0, 5);
+      });
     } catch (err) {
       console.error(err);
       setResult(null);
@@ -39,6 +79,62 @@ function UrlChecker() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadSample = (value) => {
+    setUrl(value);
+    setError("");
+    setFeedbackMessage("");
+  };
+
+  const restoreCheck = (entry) => {
+    setUrl(entry.url);
+    setResult({
+      url: entry.url,
+      label: entry.label,
+      risk_score: entry.riskScore,
+      reasons: entry.reasons,
+    });
+    setError("");
+    setFeedbackMessage("");
+  };
+
+  const copySummary = async () => {
+    if (!result) return;
+
+    const summary = [
+      `URL: ${result.url}`,
+      `Verdict: ${result.label}`,
+      `Risk score: ${result.risk_score}%`,
+      `Reasons: ${result.reasons.join("; ")}`,
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(summary);
+      setFeedbackMessage("Summary copied to clipboard.");
+    } catch (err) {
+      console.error(err);
+      setFeedbackMessage("Clipboard access was blocked.");
+    }
+  };
+
+  const exportReport = () => {
+    if (!result) return;
+
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      detector: "url",
+      result,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = "scamshield-url-report.json";
+    link.click();
+    URL.revokeObjectURL(downloadUrl);
   };
 
   const submitFeedback = async (userLabel) => {
@@ -83,29 +179,34 @@ function UrlChecker() {
   };
 
   return (
-    <div style={{ marginTop: "30px" }}>
+    <div className="url-checker-shell">
 
       {/* INPUT CARD */}
-      <div className="glass-card" style={{ padding: "20px", marginBottom: "20px" }}>
+      <div className="glass-card url-card">
         <h3>🔗 URL Scanner</h3>
         <p style={{ marginTop: "8px", color: "var(--text-secondary)" }}>
           Check a suspicious link for phishing patterns, impersonation, and risky redirects.
         </p>
+
+        <div className="url-sample-row">
+          {SAMPLE_URLS.map((sample) => (
+            <button
+              key={sample.label}
+              type="button"
+              className="url-sample-pill"
+              onClick={() => loadSample(sample.value)}
+            >
+              {sample.label}
+            </button>
+          ))}
+        </div>
 
         <input
           type="text"
           placeholder="Paste suspicious link here..."
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "14px",
-            marginTop: "10px",
-            borderRadius: "10px",
-            border: "1px solid var(--border-color)",
-            background: "var(--bg-secondary)",
-            color: "var(--text-primary)"
-          }}
+          className="url-input"
         />
 
         {error && (
@@ -115,29 +216,46 @@ function UrlChecker() {
         <button
           onClick={checkUrl}
           disabled={loading}
-          style={{
-            marginTop: "15px",
-            width: "100%",
-            padding: "12px",
-            borderRadius: "10px",
-            border: "none",
-            opacity: loading ? 0.7 : 1,
-            background: "linear-gradient(90deg, #4facfe, #6366f1)",
-            color: "white",
-            fontWeight: "bold",
-            cursor: "pointer"
-          }}
+          className="url-primary-btn"
         >
           {loading ? "Analyzing..." : "Check URL"}
         </button>
       </div>
 
+      {recentChecks.length > 0 && (
+        <div className="glass-card url-card">
+          <div className="url-section-header">
+            <h4>Recent URL Checks</h4>
+            <span>Last {recentChecks.length} analyses</span>
+          </div>
+          <div className="url-history-list">
+            {recentChecks.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                className="url-history-item"
+                onClick={() => restoreCheck(entry)}
+              >
+                <div>
+                  <strong>{entry.label}</strong>
+                  <p>{entry.url}</p>
+                </div>
+                <span>{entry.checkedAt}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* RESULT SECTION */}
       {result && (
         <>
           {/* PROBABILITY CARD */}
-          <div className="glass-card" style={{ padding: "20px", marginBottom: "20px" }}>
-            <h4>Risk Level</h4>
+          <div className={`glass-card url-card url-risk-card ${riskTone}`}>
+            <div className="url-section-header">
+              <h4>Risk Level</h4>
+              <span>{result.risk_score}% score</span>
+            </div>
 
             <h2 style={{ color: getColor() }}>
               {result.label}
@@ -147,10 +265,10 @@ function UrlChecker() {
             <div
               style={{
                 height: "8px",
-                background: "#333",
-                borderRadius: "10px",
-                overflow: "hidden",
-                marginTop: "10px"
+                  background: "rgba(255,255,255,0.08)",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  marginTop: "10px"
               }}
             >
               <div
@@ -162,69 +280,54 @@ function UrlChecker() {
                 }}
               ></div>
             </div>
+
+            <div className="url-actions">
+              <button type="button" className="url-secondary-btn" onClick={copySummary}>
+                Copy Summary
+              </button>
+              <button type="button" className="url-secondary-btn" onClick={exportReport}>
+                Export Report
+              </button>
+            </div>
           </div>
 
           {/* INSIGHTS CARD */}
-          <div className="glass-card" style={{ padding: "20px" }}>
+          <div className="glass-card url-card">
             <h4>⚠️ Detection Insights</h4>
 
-            <ul style={{ marginTop: "10px" }}>
+            <ul className="url-reason-list">
               {result.reasons.map((r, i) => (
-                <li key={i} style={{ marginBottom: "8px" }}>
+                <li key={i}>
                   {r}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="glass-card" style={{ padding: "20px", marginTop: "20px" }}>
+          <div className="glass-card url-card">
             <h4>Was this URL verdict accurate?</h4>
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "12px" }}>
+            <div className="url-feedback-actions">
               <button
                 onClick={() => submitFeedback(result.label)}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  background: "rgba(34, 197, 94, 0.15)",
-                  color: "var(--status-safe)",
-                  border: "1px solid var(--status-safe)"
-                }}
+                className="url-feedback-btn url-feedback-success"
               >
                 Yes, correct
               </button>
               <button
                 onClick={() => submitFeedback("Safe")}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  background: "transparent",
-                  color: "var(--text-primary)",
-                  border: "1px solid var(--border-color)"
-                }}
+                className="url-feedback-btn"
               >
                 Mark Safe
               </button>
               <button
                 onClick={() => submitFeedback("Suspicious")}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  background: "transparent",
-                  color: "var(--text-primary)",
-                  border: "1px solid var(--border-color)"
-                }}
+                className="url-feedback-btn"
               >
                 Mark Suspicious
               </button>
               <button
                 onClick={() => submitFeedback("Dangerous")}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  background: "transparent",
-                  color: "var(--text-primary)",
-                  border: "1px solid var(--border-color)"
-                }}
+                className="url-feedback-btn"
               >
                 Mark Dangerous
               </button>
