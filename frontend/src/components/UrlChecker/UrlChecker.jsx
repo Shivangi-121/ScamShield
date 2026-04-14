@@ -41,7 +41,7 @@ function UrlChecker() {
     setError("");
     setFeedbackMessage("");
     try {
-      const res = await fetch("http://localhost:8000/api/check-url", {
+      const res = await fetch("/api/check-url", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -142,7 +142,7 @@ function UrlChecker() {
 
     setFeedbackMessage("");
     try {
-      const res = await fetch("http://localhost:8000/api/feedback", {
+const res = await fetch("/api/feedback", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

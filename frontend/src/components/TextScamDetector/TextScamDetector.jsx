@@ -14,7 +14,7 @@ const TextScamDetector = () => {
     
     setIsAnalyzing(true);
     try {
-      const response = await fetch('http://localhost:8000/api/analyze', {
+      const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ const TextScamDetector = () => {
 
   const handleFeedback = async (userLabel) => {
     try {
-      const response = await fetch('http://localhost:8000/api/feedback', {
+      const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

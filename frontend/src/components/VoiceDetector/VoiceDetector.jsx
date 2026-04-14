@@ -61,7 +61,7 @@ function VoiceDetector() {
     setIsAnalyzing(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:8000/api/analyze", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -75,7 +75,10 @@ function VoiceDetector() {
       }
 
       const data = await res.json();
-      setResult(data);
+      setResult({
+        ...data,
+        insights: data.insights || [data.reason || "No details available."],
+      });
     } catch (err) {
       console.error(err);
       setResult(null);
@@ -90,7 +93,7 @@ function VoiceDetector() {
 
     setFeedbackMessage("");
     try {
-      const res = await fetch("http://localhost:8000/api/feedback", {
+      const res = await fetch("/api/feedback", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
