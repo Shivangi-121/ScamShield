@@ -83,26 +83,87 @@ ScamShield/
 
 
 ---
+## 🏗️ Architecture Diagram
+          ┌────────────────────┐
+          │      User (UI)     │
+          │  React Frontend    │
+          └─────────┬──────────┘
+                    │
+                    │ HTTP Requests (Fetch API)
+                    ▼
+          ┌────────────────────┐
+          │    FastAPI Backend │
+          │   (main.py APIs)   │
+          └─────────┬──────────┘
+                    │
+        ┌───────────┴────────────┐
+        │                        │
+        ▼                        ▼
+┌───────────────┐      ┌────────────────┐
+│ Text Analysis │      │  URL Analyzer  │
+│  (ML Model)   │      │ (Heuristics)   │
+└──────┬────────┘      └───────┬────────┘
+       │                        │
+       ▼                        ▼
+┌───────────────┐      ┌────────────────┐
+│ Vectorizer    │      │ Pattern Checks │
+│ + Model (.pkl)│      │ Keywords, HTTPS│
+└──────┬────────┘      └───────┬────────┘
+       │                        │
+       └──────────┬─────────────┘
+                  ▼
+         ┌────────────────────┐
+         │ Risk Score Engine  │
+         │ + Explainable AI   │
+         └─────────┬──────────┘
+                   ▼
+          ┌────────────────────┐
+          │ JSON Response API  │
+          └─────────┬──────────┘
+                    ▼
+          ┌────────────────────┐
+          │ Frontend UI Output │
+          │ (Score + Insights) │
+          └────────────────────┘
+
 
 ## ⚙️ How to Run
 
-### 🔹 Backend
+Follow these steps to run the project locally.
+
+---
+
+### 🔹 1. Clone the Repository
 
 ```bash
+git clone https://github.com/<your-username>/ScamShield.git
+cd ScamShield
+
+🔹 2. Setup Backend (FastAPI)
 cd backend
+
+Install dependencies:
 pip install fastapi uvicorn scikit-learn numpy
+
+Run the server:
 python -m uvicorn main:app --reload
-Backend runs on:
+
+Backend will start at:
 👉 http://localhost:8000
 
-🔹 Frontend
-Bash
+🔹 3. Setup Frontend (React + Vite)
+Open a new terminal:
 cd frontend
+
+Install dependencies:
 npm install
+
+Run the frontend:
 npm run dev
 
-Frontend runs on:
+Frontend will start at:
 👉 http://localhost:5173
+
 
 🧪 Sample Test Cases
 🔴 Dangerous URL
@@ -130,9 +191,9 @@ https://www.google.com
 🧩 Browser extension
 
 👨‍💻 Contributors
-Ritik
-Shivangi
-Rupesh
+- Ritik Raj
+- Shivangi Joshi
+
 
 
 
