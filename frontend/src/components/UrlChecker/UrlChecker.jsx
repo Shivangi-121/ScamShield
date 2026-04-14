@@ -35,7 +35,7 @@ function UrlChecker() {
 
   const getProgress = () => {
     if (!result) return 0;
-    return Math.min(result.risk_score * 20, 100);
+    return result.risk_score;
   };
 
   return (

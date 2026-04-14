@@ -50,6 +50,29 @@ const TextScamDetector = () => {
     setResults(null);
   };
 
+  const handleFeedback = async (userLabel) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          input_data: inputText,
+          original_label: results.label,
+          user_label: userLabel,
+          type: 'text'
+        }),
+      });
+
+      if (response.ok) {
+        alert('Feedback received! Thank you for helping us improve.');
+      }
+    } catch (error) {
+      console.error('Error sending feedback:', error);
+    }
+  };
+
   const highlightedText = useMemo(() => {
     if (!results || !inputText) return inputText;
 
@@ -193,6 +216,41 @@ const TextScamDetector = () => {
               </h3>
               <div className="highlighted-text">
                 {highlightedText}
+              </div>
+            </div>
+
+            {/* FEEDBACK LOOP */}
+            <div className="glass-card" style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+              <h3 style={{ marginBottom: '1rem', fontSize: '1rem', color: 'var(--text-secondary)' }}>
+                Was this analysis accurate?
+              </h3>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => handleFeedback(results.label)}
+                  style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--status-safe)', background: 'rgba(34, 197, 94, 0.1)', color: 'var(--status-safe)', cursor: 'pointer' }}
+                >
+                  ✅ Yes, Correct
+                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={() => handleFeedback('Safe')}
+                    style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #666', background: 'none', color: '#ccc', fontSize: '0.8rem', cursor: 'pointer' }}
+                  >
+                    🚩 Mark Safe
+                  </button>
+                  <button 
+                    onClick={() => handleFeedback('Suspicious')}
+                    style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #666', background: 'none', color: '#ccc', fontSize: '0.8rem', cursor: 'pointer' }}
+                  >
+                    🚩 Mark Suspicious
+                  </button>
+                  <button 
+                    onClick={() => handleFeedback('Scam')}
+                    style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #666', background: 'none', color: '#ccc', fontSize: '0.8rem', cursor: 'pointer' }}
+                  >
+                    🚩 Mark Scam
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
