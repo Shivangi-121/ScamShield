@@ -41,7 +41,8 @@ function UrlChecker() {
     setError("");
     setFeedbackMessage("");
     try {
-      const res = await fetch("/api/check-url", {
+      const res = await fetch(
+  `${import.meta.env.VITE_API_URL}/api/check-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

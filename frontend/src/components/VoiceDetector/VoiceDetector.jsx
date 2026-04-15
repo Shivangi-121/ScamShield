@@ -61,7 +61,7 @@ function VoiceDetector() {
     setIsAnalyzing(true);
     setError("");
     try {
-      const res = await fetch("/api/analyze", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/analyze`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
