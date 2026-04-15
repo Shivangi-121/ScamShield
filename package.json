@@ -1,0 +1,7 @@
+{
+  "name": "scamshield-root",
+  "private": true,
+  "scripts": {
+    "start": "cd backend && npm install && node server.js"
+  }
+}
