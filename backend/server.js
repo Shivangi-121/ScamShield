@@ -7,20 +7,24 @@ dotenv.config();
 const app = express();
 
 // =========================
-// MIDDLEWARE
+// SECURITY + MIDDLEWARE
 // =========================
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"]
+}));
+
+app.use(express.json({ limit: "10kb" }));
 
 // =========================
 // HEALTH CHECK
 // =========================
 app.get("/test", (req, res) => {
-  res.json({ status: "backend working fine 🚀" });
+  res.json({ status: "ScamShield backend is live 🚀" });
 });
 
 // =========================
-// 🧠 SCAM DETECTION (MOCK AI)
+// 🧠 SCAM DETECTION
 // =========================
 app.post("/api/analyze", (req, res) => {
   try {
@@ -47,7 +51,7 @@ app.post("/api/analyze", (req, res) => {
     ) {
       label = "Scam";
       probability = 90;
-      reason = "Contains common scam keywords.";
+      reason = "Contains scam-like keywords.";
     } else if (
       lowerText.includes("offer") ||
       lowerText.includes("discount") ||
@@ -55,17 +59,13 @@ app.post("/api/analyze", (req, res) => {
     ) {
       label = "Suspicious";
       probability = 60;
-      reason = "Looks promotional or suspicious.";
+      reason = "Looks promotional or risky.";
     }
 
-    return res.json({
-      label,
-      probability,
-      reason,
-    });
+    return res.json({ label, probability, reason });
 
-  } catch (error) {
-    console.error("Analyze error:", error);
+  } catch (err) {
+    console.error("Analyze error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -87,39 +87,24 @@ app.post("/api/check-url", (req, res) => {
     let label = "Safe";
     let reasons = [];
 
-    if (
-      lowerUrl.includes("bit.ly") ||
-      lowerUrl.includes("tinyurl") ||
-      lowerUrl.includes("goo.gl")
-    ) {
+    if (["bit.ly", "tinyurl", "goo.gl"].some(x => lowerUrl.includes(x))) {
       riskScore += 30;
-      reasons.push("Shortened URL can hide destination.");
+      reasons.push("Shortened URL detected.");
     }
 
-    if (
-      lowerUrl.includes("login") ||
-      lowerUrl.includes("verify") ||
-      lowerUrl.includes("secure")
-    ) {
+    if (["login", "verify", "secure"].some(x => lowerUrl.includes(x))) {
       riskScore += 20;
-      reasons.push("Contains login/verification wording.");
+      reasons.push("Suspicious login/verification terms.");
     }
 
-    if (
-      lowerUrl.includes("paypal") ||
-      lowerUrl.includes("bank") ||
-      lowerUrl.includes("amazon")
-    ) {
+    if (["paypal", "bank", "amazon"].some(x => lowerUrl.includes(x))) {
       riskScore += 20;
-      reasons.push("May impersonate trusted brand.");
+      reasons.push("Possible brand impersonation.");
     }
 
-    if (
-      lowerUrl.includes("alert") ||
-      lowerUrl.includes("account")
-    ) {
+    if (["alert", "account"].some(x => lowerUrl.includes(x))) {
       riskScore += 10;
-      reasons.push("Contains urgency/account-related words.");
+      reasons.push("Urgency-related wording detected.");
     }
 
     if (riskScore >= 70) label = "Scam";
@@ -129,17 +114,17 @@ app.post("/api/check-url", (req, res) => {
       url,
       label,
       risk_score: Math.min(riskScore, 100),
-      reasons: reasons.length ? reasons : ["No obvious scam indicators found."],
+      reasons: reasons.length ? reasons : ["No strong threats detected."]
     });
 
-  } catch (error) {
-    console.error("URL error:", error);
+  } catch (err) {
+    console.error("URL error:", err);
     return res.status(500).json({ error: "URL analysis failed" });
   }
 });
 
 // =========================
-// 📩 FEEDBACK ROUTE
+// 📩 FEEDBACK
 // =========================
 app.post("/api/feedback", (req, res) => {
   try {
@@ -154,25 +139,22 @@ app.post("/api/feedback", (req, res) => {
       original_label,
       user_label,
       type,
-      receivedAt: new Date().toISOString(),
+      time: new Date().toISOString()
     });
 
-    return res.json({
-      success: true,
-      message: "Feedback saved",
-    });
+    return res.json({ success: true });
 
-  } catch (error) {
-    console.error("Feedback error:", error);
-    return res.status(500).json({ error: "Unable to save feedback" });
+  } catch (err) {
+    console.error("Feedback error:", err);
+    return res.status(500).json({ error: "Failed to save feedback" });
   }
 });
 
 // =========================
-// 🚀 START SERVER (RENDER SAFE)
+// 🚀 START SERVER
 // =========================
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 ScamShield running on port ${PORT}`);
 });
